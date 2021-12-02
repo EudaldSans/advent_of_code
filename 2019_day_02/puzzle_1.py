@@ -21,20 +21,21 @@ if __name__ == '__main__':
     steps = range(0, len(opcodes), 4)
 
     for index in steps:
-        if opcodes[index] == 1:
-            a, b, pos = get_operators(opcodes, index)
-            opcodes[pos] = a + b
+        match opcodes[index]:
+            case 1:
+                a, b, pos = get_operators(opcodes, index)
+                opcodes[pos] = a + b
 
-        elif opcodes[index] == 2:
-            a, b, pos = get_operators(opcodes, index)
-            opcodes[pos] = a*b
+            case 2:
+                a, b, pos = get_operators(opcodes, index)
+                opcodes[pos] = a*b
 
-        elif opcodes[index] == 99:
-            print(f'Exit program at {index}')
-            break
+            case 99:
+                print(f'Exit program at {index}')
+                break
 
-        else:
-            print('Somehting went wrong')
+            case _:
+                raise ValueError(f'Unrecognised opcode {opcodes[index]} at {index}')
 
     print(f'Result = {opcodes[0]}')
 

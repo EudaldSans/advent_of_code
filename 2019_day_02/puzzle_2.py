@@ -31,21 +31,21 @@ if __name__ == '__main__':
                 opcodes[2] = verb
 
                 for index in steps:
-                    if opcodes[index] == 1:
-                        a, b, pos = get_operators(opcodes, index)
-                        opcodes[pos] = a + b
+                    match opcodes[index]:
+                        case 1:
+                            a, b, pos = get_operators(opcodes, index)
+                            opcodes[pos] = a + b
 
-                    elif opcodes[index] == 2:
-                        a, b, pos = get_operators(opcodes, index)
-                        opcodes[pos] = a*b
+                        case 2:
+                            a, b, pos = get_operators(opcodes, index)
+                            opcodes[pos] = a*b
 
-                    elif opcodes[index] == 99:
-                        print(f'Exit program at {index} with {opcodes[0]}')
-                        break
+                        case 99:
+                            print(f'Exit program at {index} with {opcodes[0]}')
+                            break
 
-                    else:
-                        print(f'Something went wrong with a {noun} and b {verb}')
-                        break
+                        case _:
+                            raise ValueError(f'Unrecognised opcode {opcodes[index]} at {index}')
 
                 if opcodes[0] == 19690720:
                     raise BreakIt
