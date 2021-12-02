@@ -25,14 +25,15 @@ def main(course_path: str):
     for command in path:
         direction, distance = command.split(' ')
 
-        if direction == 'up':
-            submarine.move_up(int(distance))
-        elif direction == 'down':
-            submarine.move_down(int(distance))
-        elif direction == 'forward':
-            submarine.move_forwards(int(distance))
-        else:
-            print('Unknown command.')
+        match direction:
+            case 'up':
+                submarine.move_up(int(distance))
+            case 'down':
+                submarine.move_down(int(distance))
+            case 'forward':
+                submarine.move_forwards(int(distance))
+            case _:
+                raise TypeError('Unrecognised direction')
 
     result = submarine.horizontal_pos*submarine.depth
     print(f'Submarine position: ({submarine.horizontal_pos}, {submarine.depth}). Result: {result}')
