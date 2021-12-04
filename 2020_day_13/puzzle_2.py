@@ -32,7 +32,7 @@ def do_crt(remainders: List[int], modules: List[int]) -> int:
     return result
 
 
-def main(timetable_path):
+def main(timetable_path) -> None:
     with open(timetable_path) as f:
         lines = f.readlines()
 
