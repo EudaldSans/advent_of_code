@@ -38,7 +38,7 @@ class Cable:
 
         self.trail[x_min: x_max + 1, y_min: y_max + 1] = 1
 
-    def add_step(self, order: str, update_trail: bool):
+    def add_step(self, order: str, update_trail: bool) -> int:
         direction = order[0]
         step_length = int(order[1:])
 
@@ -63,34 +63,31 @@ class Cable:
     def __str__(self) -> str:
         return str(self.trail)
 
-    def steps_to_point(self, point: Point):
-        pass
-
     @classmethod
     def manhattan_distance(cls, point: Point):
         return abs(cls.starting_point.x - point.x) + abs(cls.starting_point.y - point.y)
 
-    def steps_to_point(self, point):
+    def steps_to_point(self, point) -> int:
         self.head = self.starting_point
+        steps = 0
 
         for order in self.cable_info.split(','):
-            direction = order[0]
-            step_length = int(order[1:])
+            old_head = self.head
+            self.add_step(order, False)
 
-            x = self.head.x
-            y = self.head.y
+            if point.x == self.head.x:
+                line = [Point(point.x, y) for y in range(min(old_head.y, self.head.y), max(old_head.y, self.head.y))]
+                if point in line:
+                    return steps + abs(old_head.y - point.y)
 
-            if direction == 'U':
-                self.head = Point(x, y + step_length)
+            if point.y == self.head.y:
+                line = [Point(x, point.y) for x in range(min(old_head.x, self.head.x), max(old_head.x, self.head.x))]
+                if point in line:
+                    return steps + abs(old_head.x - point.x)
 
-            if direction == 'D':
-                self.head = Point(x, y - step_length)
+            steps = steps + int(order[1:])
 
-            if direction == 'R':
-                self.head = Point(x + step_length, y)
-
-            if direction == 'L':
-                self.head = Point(x - step_length, y)
+        raise ValueError('Did not find point in trail')
 
 
 def find_intersections(cable_1: Cable, cable_2: Cable) -> List[Point]:
