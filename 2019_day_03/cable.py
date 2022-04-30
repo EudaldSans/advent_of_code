@@ -45,17 +45,11 @@ class Cable:
         x = self.head.x
         y = self.head.y
 
-        if direction == 'U':
-            self.head = Point(x, y + step_length)
-
-        if direction == 'D':
-            self.head = Point(x, y - step_length)
-
-        if direction == 'R':
-            self.head = Point(x + step_length, y)
-
-        if direction == 'L':
-            self.head = Point(x - step_length, y)
+        match direction:
+            case 'U': self.head = Point(x, y + step_length)
+            case 'D': self.head = Point(x, y - step_length)
+            case 'R': self.head = Point(x + step_length, y)
+            case 'L': self.head = Point(x - step_length, y)
 
         if update_trail:
             self.update_trail(Point(x, y), self.head)
