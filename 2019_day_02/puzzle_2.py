@@ -1,12 +1,4 @@
-def get_operators(opcodes, index):
-    pos_a = opcodes[index + 1]
-    pos_b = opcodes[index + 2]
-    pos_store = opcodes[index + 3]
-
-    op_a = opcodes[pos_a]
-    op_b = opcodes[pos_b]
-
-    return op_a, op_b, pos_store
+from computer import IntCodeComputer
 
 
 class BreakIt(Exception):
@@ -16,38 +8,19 @@ class BreakIt(Exception):
 if __name__ == '__main__':
     with open('program.tx') as file:
         text = file.readline()
-        original_opcodes = [int(n) for n in text.split(',')]
+        opcodes = [int(n) for n in text.split(',')]
 
     verb = -1
     noun = -1
 
-    print(original_opcodes)
-    steps = range(0, len(original_opcodes), 4)
+    computer = IntCodeComputer(opcodes)
+
     try:
         for noun in range(100):
             for verb in range(100):
-                opcodes = original_opcodes.copy()
-                opcodes[1] = noun
-                opcodes[2] = verb
+                index, result = computer.run_instance(noun, verb)
 
-                for index in steps:
-                    match opcodes[index]:
-                        case 1:
-                            a, b, pos = get_operators(opcodes, index)
-                            opcodes[pos] = a + b
-
-                        case 2:
-                            a, b, pos = get_operators(opcodes, index)
-                            opcodes[pos] = a*b
-
-                        case 99:
-                            print(f'Exit program at {index} with {opcodes[0]}')
-                            break
-
-                        case _:
-                            raise ValueError(f'Unrecognised opcode {opcodes[index]} at {index}')
-
-                if opcodes[0] == 19690720:
+                if result == 19690720:
                     raise BreakIt
 
     except BreakIt:
