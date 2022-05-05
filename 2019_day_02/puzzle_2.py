@@ -13,11 +13,10 @@ if __name__ == '__main__':
     verb = -1
     noun = -1
 
-    computer = IntCodeComputer(opcodes)
-
     try:
         for noun in range(100):
             for verb in range(100):
+                computer = IntCodeComputer(opcodes.copy())
                 index, result = computer.run_instance(noun, verb)
 
                 if result == 19690720:

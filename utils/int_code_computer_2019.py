@@ -4,39 +4,60 @@ from typing import List, Tuple
 class IntCodeComputer:
     def __init__(self, opcodes: List[int]):
         self.opcodes = opcodes
+        self.instruction_pointer = 0
+        self.outputs = list()
 
-    def run_instance(self, noun: int, verb: int) -> Tuple[int, int]:
-        opcodes = self.opcodes.copy()
-        opcodes[1] = noun
-        opcodes[2] = verb
+    def obtain_parameters(self, instruction: int) -> Tuple[int, int, int]:
+        param_1 = self.opcodes[self.instruction_pointer + 1]
+        param_2 = self.opcodes[self.instruction_pointer + 2]
+        param_3 = self.opcodes[self.instruction_pointer + 3]
 
-        for index in range(0, len(opcodes), 4):
-            match opcodes[index]:
+        if instruction // 100 % 10 == 0:
+            param_1 = self.opcodes[param_1]
+
+        if instruction // 1000 % 10 == 0:
+            param_2 = self.opcodes[param_2]
+
+        return param_1, param_2, param_3
+
+    def run_instance(self, noun: int = None, verb: int = None, program_input: int = 0) -> Tuple[int, int]:
+        if noun:
+            self.opcodes[1] = noun
+        if verb:
+            self.opcodes[2] = verb
+
+        end_of_program = len(self.opcodes)
+
+        while self.instruction_pointer < end_of_program:
+            instruction = self.opcodes[self.instruction_pointer]
+            op_code = instruction % 100
+
+            match op_code:
                 case 1:
-                    pos_a = opcodes[index + 1]
-                    pos_b = opcodes[index + 2]
-
-                    pos = opcodes[index + 3]
-                    a = opcodes[pos_a]
-                    b = opcodes[pos_b]
-
-                    opcodes[pos] = a + b
+                    a, b, pos = self.obtain_parameters(instruction)
+                    self.opcodes[pos] = a + b
+                    self.instruction_pointer += 4
 
                 case 2:
-                    pos_a = opcodes[index + 1]
-                    pos_b = opcodes[index + 2]
+                    a, b, pos = self.obtain_parameters(instruction)
+                    self.opcodes[pos] = a * b
+                    self.instruction_pointer += 4
 
-                    pos = opcodes[index + 3]
-                    a = opcodes[pos_a]
-                    b = opcodes[pos_b]
+                case 3:
+                    pos = self.opcodes[self.instruction_pointer + 1]
+                    self.opcodes[pos] = program_input
+                    self.instruction_pointer += 2
 
-                    opcodes[pos] = a * b
+                case 4:
+                    pos = self.opcodes[self.instruction_pointer + 1]
+                    self.outputs.append(self.opcodes[pos])
+                    self.instruction_pointer += 2
 
                 case 99:
-                    return index, opcodes[0]
+                    return self.instruction_pointer, self.opcodes[0]
 
                 case _:
-                    raise ValueError(f'Unrecognised opcode {opcodes[index]} at {index}')
+                    raise ValueError(f'Unrecognised instruction {instruction} at {self.instruction_pointer}')
 
         raise ValueError('Program ran without an exit instruction')
 
