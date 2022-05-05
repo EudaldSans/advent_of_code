@@ -9,6 +9,6 @@ if __name__ == '__main__':
     computer = IntCodeComputer(opcodes)
 
     index, result = computer.run_instance(program_input=1)
-    print(computer.outputs)
 
-    print(f'{result}, {index}')
+    print(f'Computer outputs: {computer.outputs[:-1]}')
+    print(f'Diagnostic code {computer.outputs[-1]}')

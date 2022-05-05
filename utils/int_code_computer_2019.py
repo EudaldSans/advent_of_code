@@ -7,18 +7,18 @@ class IntCodeComputer:
         self.instruction_pointer = 0
         self.outputs = list()
 
-    def obtain_parameters(self, instruction: int) -> Tuple[int, int, int]:
-        param_1 = self.opcodes[self.instruction_pointer + 1]
-        param_2 = self.opcodes[self.instruction_pointer + 2]
-        param_3 = self.opcodes[self.instruction_pointer + 3]
+    def obtain_parameters(self, instruction: int, number_of_parameters: int) -> Tuple[int, ...]:
+        parameters = list()
 
-        if instruction // 100 % 10 == 0:
-            param_1 = self.opcodes[param_1]
+        for i in range(number_of_parameters):
+            parameter = self.opcodes[self.instruction_pointer + 1 + i]
 
-        if instruction // 1000 % 10 == 0:
-            param_2 = self.opcodes[param_2]
+            if instruction // 10**(i + 2) % 10 == 0:
+                parameter = self.opcodes[parameter]
 
-        return param_1, param_2, param_3
+            parameters.append(parameter)
+
+        return tuple(parameters)
 
     def run_instance(self, noun: int = None, verb: int = None, program_input: int = 0) -> Tuple[int, int]:
         if noun:
@@ -34,12 +34,14 @@ class IntCodeComputer:
 
             match op_code:
                 case 1:
-                    a, b, pos = self.obtain_parameters(instruction)
+                    a, b = self.obtain_parameters(instruction, 2)
+                    pos = self.opcodes[self.instruction_pointer + 3]
                     self.opcodes[pos] = a + b
                     self.instruction_pointer += 4
 
                 case 2:
-                    a, b, pos = self.obtain_parameters(instruction)
+                    a, b = self.obtain_parameters(instruction, 2)
+                    pos = self.opcodes[self.instruction_pointer + 3]
                     self.opcodes[pos] = a * b
                     self.instruction_pointer += 4
 
@@ -49,9 +51,45 @@ class IntCodeComputer:
                     self.instruction_pointer += 2
 
                 case 4:
-                    pos = self.opcodes[self.instruction_pointer + 1]
-                    self.outputs.append(self.opcodes[pos])
+                    pos, = self.obtain_parameters(instruction, 1)
+                    self.outputs.append(pos)
                     self.instruction_pointer += 2
+
+                case 5:
+                    a, b = self.obtain_parameters(instruction, 2)
+                    if a != 0:
+                        self.instruction_pointer = b
+                    else:
+                        self.instruction_pointer += 3
+
+                case 6:
+                    a, b = self.obtain_parameters(instruction, 2)
+                    if a == 0:
+                        self.instruction_pointer = b
+                    else:
+                        self.instruction_pointer += 3
+
+                case 7:
+                    a, b = self.obtain_parameters(instruction, 2)
+                    pos = self.opcodes[self.instruction_pointer + 3]
+
+                    if a < b:
+                        self.opcodes[pos] = 1
+                    else:
+                        self.opcodes[pos] = 0
+
+                    self.instruction_pointer += 4
+
+                case 8:
+                    a, b = self.obtain_parameters(instruction, 2)
+                    pos = self.opcodes[self.instruction_pointer + 3]
+
+                    if a == b:
+                        self.opcodes[pos] = 1
+                    else:
+                        self.opcodes[pos] = 0
+
+                    self.instruction_pointer += 4
 
                 case 99:
                     return self.instruction_pointer, self.opcodes[0]
