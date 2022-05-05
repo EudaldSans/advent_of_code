@@ -1,29 +1,10 @@
+from utils.int_code_computer_2019 import IntCodeComputer
 
 if __name__ == '__main__':
-    start = 284639
-    finish = 748759
+    opcodes = [1,1,1,4,99,5,6,0,99]
 
-    valid_passwords = 0
+    computer = IntCodeComputer(opcodes)
 
-    for password in range(start, finish):
-        password_str = str(password)
+    index, result = computer.run_instance(1, 1)
 
-        doubles = False
-        non_decreasing = True
-
-        previous_char = '0'
-
-        for character in password_str:
-            if previous_char == character:
-                doubles = True
-
-            if int(previous_char) > int(character):
-                non_decreasing = False
-                break
-
-            previous_char = character
-
-        if doubles and non_decreasing:
-            valid_passwords += 1
-
-    print(f'There are {valid_passwords} valid passwords between {start} and {finish}')
+    print(f'{result}, {index}')

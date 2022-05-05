@@ -1,4 +1,4 @@
-from computer import IntCodeComputer
+from utils.int_code_computer_2019 import IntCodeComputer
 
 
 class BreakIt(Exception):
