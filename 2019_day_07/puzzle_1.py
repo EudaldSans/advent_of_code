@@ -16,22 +16,22 @@ class Amplifier(IntCodeComputer):
         self.name = name
 
         self.input_lock.acquire()
-        self.work_thread = Thread(target=super().run_instance)
+        self.work_thread = Thread(target=self.run_instance)
 
         super().__init__(opcodes)
 
     def enter_input(self, input: int):
         self.input_event.set()
         self.input_value = input
-        self.input_lock.acquire()
+
+        if self.work_thread.is_alive():
+            self.input_lock.acquire()
 
     def input(self, instruction: int, program_input: int) -> None:
         self.input_event.wait(1)
-        self.input_lock.release()
-        if not self.input_event.is_set():
-            raise ValueError(f'Input event of amp {self.name} timed out')
-
         self.input_event.clear()
+        self.input_lock.release()
+
         super().input(instruction, self.input_value)
 
     def output(self, instruction: int) -> None:
@@ -46,6 +46,21 @@ class Amplifier(IntCodeComputer):
 
     def join(self):
         self.work_thread.join()
+
+    def __repr__(self):
+        return f'Amplifier {self.name}'
+
+
+def test_amplifiers(amplifiers: List[Amplifier], sequence: List[int]) -> int:
+    for amplifier, first_input in zip(amplifiers, sequence):
+        amplifier.start()
+        amplifier.enter_input(first_input)
+
+    amplifiers[0].enter_input(0)
+
+    amplifiers[-1].join()
+
+    return amplifiers[-1].outputs[-1]
 
 
 if __name__ == '__main__':
@@ -64,18 +79,10 @@ if __name__ == '__main__':
         output = 0
         amplifiers = [Amplifier(copy.deepcopy(opcodes), f'{name}{count}') for name in amplifier_names]
 
-        for count, amplifier in enumerate(amplifiers[:-1]):
-            amplifier.output_amp = amplifiers[count + 1]
+        for amp_count, amplifier in enumerate(amplifiers[:-1]):
+            amplifier.output_amp = amplifiers[amp_count + 1]
 
-        for amplifier, first_input in zip(amplifiers, sequence):
-            amplifier.start()
-            amplifier.enter_input(first_input)
-
-        amplifiers[0].enter_input(0)
-
-        amplifiers[-1].join()
-
-        output = amplifiers[-1].outputs[0]
+        output = test_amplifiers(amplifiers, sequence)
 
         if output > max_output:
             max_output = output
