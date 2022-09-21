@@ -16,6 +16,7 @@ class Amplifier(IntCodeComputer):
         self.name = name
 
         self.input_lock.acquire()
+        self.work_thread = Thread(target=super().run_instance)
 
         super().__init__(opcodes)
 
@@ -41,8 +42,10 @@ class Amplifier(IntCodeComputer):
             self.output_amp.enter_input(output)
 
     def start(self):
-        thread = Thread(target=super().run_instance)
-        thread.start()
+        self.work_thread.start()
+
+    def join(self):
+        self.work_thread.join()
 
 
 if __name__ == '__main__':
@@ -70,8 +73,7 @@ if __name__ == '__main__':
 
         amplifiers[0].enter_input(0)
 
-        while len(amplifiers[-1].outputs) == 0:
-            time.sleep(5/1000)
+        amplifiers[-1].join()
 
         output = amplifiers[-1].outputs[0]
 
