@@ -103,4 +103,3 @@ class IntCodeComputer:
                 case _: raise ValueError(f'Unrecognised instruction {instruction} at {self.instruction_pointer}')
 
         raise ValueError('Program ran without an exit instruction')
-
