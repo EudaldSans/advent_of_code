@@ -6,7 +6,7 @@ class BreakIt(Exception):
 
 
 if __name__ == '__main__':
-    with open('program.tx') as file:
+    with open('program.txt') as file:
         text = file.readline()
         opcodes = [int(n) for n in text.split(',')]
 
