@@ -44,7 +44,7 @@ class IntCodeComputer:
                 raise ValueError(f'{instruction} tried to write to negative memory at {parameter_position}')
 
             if parameter_position > len(self.opcodes):
-                self.opcodes.extend([0] * (parameter_position - len(self.opcodes) + 4))
+                self.opcodes.extend([0] * (parameter_position - len(self.opcodes) + 5))
 
             self.opcodes[parameter_position] = parameter
 
