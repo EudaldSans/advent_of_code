@@ -1,104 +1,87 @@
-from typing import List
-
-from copy import deepcopy
-
-from tqdm import tqdm
+from typing import Tuple, List
 
 
-class Range:
-    def __init__(self, source, destination, length):
-        self.source_start = source
-        self.source_end = source + length - 1
-
-        self.destination_start = destination
-        self.destination_end = destination + length - 1
-
-    def __contains__(self, item: int) -> bool:
-        return self.source_start <= item <= self.source_end
-
-    def convert(self, source: int) -> int:
-        return self.destination_start + (source - self.source_start)
-
-
-class ConversionMap:
-    def __init__(self, map_lines: List[str], name: str) -> None:
-        self.converter = dict()
-        self.name = name
-        self.ranges = list()
-
-        for line in map_lines:
-            destination, source, length = line.split(' ')
-            self.ranges.append(Range(int(source), int(destination), int(length)))
+class Seed:
+    def __init__(self, start: int, length: int) -> None:
+        self.start_location = start
+        self.ranges = [(start, start + length)]
 
     def __repr__(self):
-        return f'{self.name} map with conversion values {self.converter}'
+        return f"{self.start_location}->{self.ranges}"
 
-    def convert(self, source: int) -> int:
-        for value_range in self.ranges:
-            if source in value_range: return value_range.convert(source)
+    def get_closest_location(self) -> int:
+        range_starts = [range_start for range_start, _ in self.ranges]
+        return min(range_starts)
 
-        return source
+
+class SeedConverter:
+    def __init__(self, name: str, map_lines: List[str]) -> None:
+        self.name = name
+
+        self.conversion_maps = [[int(x) for x in line.split()] for line in map_lines]
+
+    def __repr__(self):
+        return f"{self.name} map:\n{self.conversion_maps}"
+
+    def convert_seed(self, seed: Seed) -> None:
+        updated_ranges = list()
+        for dst, src, size in self.conversion_maps:
+            src_end = src + size
+
+            new_seed_ranges = list()
+            while seed.ranges:
+                seed_start, seed_end = seed.ranges.pop()
+
+                before_converter = (seed_start, min(seed_end, src))
+                in_converter = (max(seed_start, src), min(src_end, seed_end))
+                after_converter = (max(src_end, seed_start), seed_end)
+
+                if before_converter[0] < before_converter[1]:
+                    new_seed_ranges.append(before_converter)
+
+                if in_converter[0] < in_converter[1]:
+                    updated_ranges.append((in_converter[0] - src + dst, in_converter[1] - src + dst))
+
+                if after_converter[0] < after_converter[1]:
+                    new_seed_ranges.append(after_converter)
+
+            seed.ranges = new_seed_ranges
+
+        seed.ranges = seed.ranges + updated_ranges
 
 
 def main(file_name: str) -> None:
-    with open(file_name, 'r') as file:
-        map_lines = file.readlines()
-        map_lines = [line.strip('\n') for line in map_lines]
+    with open(file_name) as garden_file:
+        garden_lines = garden_file.read()
 
-    seeds = map_lines[0]
-    seeds = seeds.split(' ')[1:]
+    garden_parts = garden_lines.split('\n\n')
+    seeds = garden_parts[0].split(':')[1].split(' ')[1:]
     seeds = [int(seed) for seed in seeds]
+    garden_parts = garden_parts[1:]
 
-    map_list = list()
-    map_name = 'unknown'
-    lines_start = 2
-    map_lines = map_lines[2:]
-    for count, line in tqdm(enumerate(map_lines), desc='Generating conversion maps'):
-        if 'map' in line:
-            map_name = (line.split(' '))[0]
-            lines_start = count
-        elif line == '':
-            map_list.append(ConversionMap(map_lines[lines_start + 1: count], map_name))
-            map_name = 'unknown'
+    converters = list()
+    for converter in garden_parts:
+        converter_parts = converter.split('\n')
+        converter_name = converter_parts[0].split(' ')[0]
+        converter_lines = converter_parts[1:]
+        converters.append(SeedConverter(converter_name, converter_lines))
 
-    map_list.append(ConversionMap(map_lines[lines_start + 1: count], map_name))
+    simple_seeds = [Seed(seed_value, 1) for seed_value in seeds]
 
-    locations = list()
-    for seed in seeds:
-        location = seed
-        for conversion_map in tqdm(map_list, desc=f'Converting seed {seed}'):
-            location = conversion_map.convert(location)
+    for seed in simple_seeds:
+        for converter in converters:
+            converter.convert_seed(seed)
 
-        locations.append(location)
+    closest_location = min([seed.get_closest_location() for seed in simple_seeds])
+    print(f'The closest location in the simple garden is {closest_location}')
 
-    closest_location = min(locations)
-    closest_location_index = locations.index(closest_location)
-    closest_seed = seeds[closest_location_index]
+    extended_seeds = [Seed(seed_start, seed_size) for seed_start, seed_size in zip(seeds[::2], seeds[1::2])]
+    for seed in extended_seeds:
+        for converter in converters:
+            converter.convert_seed(seed)
 
-    '''for count, seed in enumerate(seeds):
-        print(f'Seed number {seed} corresponds to soil number {locations[count]}')'''
-
-    print(f'The closest location is {closest_location} for the seed {closest_seed}')
-
-    paired_seeds = [(seeds[i - 1], seeds[i]) for i in range(len(seeds)) if i % 2 == 1]
-    locations.clear()
-    new_seeds = list()
-
-    for seeds_start, seed_length in paired_seeds:
-        print(range(seeds_start, seeds_start + seed_length, 1))
-        for seed in tqdm(range(seeds_start, seeds_start + seed_length, 1), desc=f'Converting seed pair {seeds_start}, {seed_length}'):
-            location = seed
-            new_seeds.append(seed)
-            for conversion_map in map_list:
-                location = conversion_map.convert(location)
-
-            locations.append(location)
-
-    closest_location = min(locations)
-    closest_location_index = locations.index(closest_location)
-    closest_seed = new_seeds[closest_location_index]
-
-    print(f'The closest location from the range is {closest_location} for the seed {closest_seed}')
+    closest_location = min([seed.get_closest_location() for seed in extended_seeds])
+    print(f'The closest location in the extended garden is {closest_location}')
 
 
 if __name__ == '__main__':
