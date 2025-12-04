@@ -1,3 +1,4 @@
-prettytable
-numpy
-tqdm
+prettytable~=3.17.0
+numpy~=2.3.5
+tqdm~=4.67.1
+scipy~=1.16.3
