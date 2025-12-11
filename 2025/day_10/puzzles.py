@@ -2,6 +2,8 @@ from itertools import combinations_with_replacement
 from typing import List
 from tqdm import tqdm
 
+from z3 import *
+
 
 def find_led_combination(leds: List[str], buttons: List[List[int]]) -> int:
     r = 1
@@ -21,19 +23,26 @@ def find_led_combination(leds: List[str], buttons: List[List[int]]) -> int:
 
 
 def find_joltage_combination(joltages: List[int], buttons: List[List[int]]) -> int:
-    r = min(joltages)
-    while True:
-        button_combos = combinations_with_replacement(buttons, r)
-        for button_combo in button_combos:
-            joltage_status = [0] * len(joltages)
-            for button_wiring in button_combo:
-                for button in button_wiring:
-                    joltage_status[button] += 1
+    vars = [Int(f"a{n}") for n in range(len(buttons))]
 
-            if joltage_status == joltages:
-                return r
+    solver = Solver()
 
-        r += 1
+    for b in vars:
+        solver.add(b >= 0)
+
+    for joltage_id, joltage in enumerate(joltages):
+        expr = [vars[button_id] for button_id, button_wiring in enumerate(buttons) if joltage_id in button_wiring]
+        solver.add(Sum(expr) == joltage)
+
+    if solver.check() != sat:
+        raise ValueError("Unsatisfiable solution")
+
+    while solver.check() == sat:
+        model = solver.model()
+        n = sum([model[d].as_long() for d in model])
+        solver.add(Sum(vars) < n)
+
+    return n
 
 
 def main():
@@ -49,11 +58,10 @@ def main():
         joltages = list(map(int, fragments[-1][1:-1].split(',')))
 
         led_result += find_led_combination(leds, buttons)
-        # joltage_result += find_joltage_combination(joltages, buttons)
-
+        joltage_result += find_joltage_combination(joltages, buttons)
 
     print(f'The sum of permutations for the LEDs is {led_result}')
-    print(f'The sum of permutations for the jolrages is {joltage_result}')
+    print(f'The sum of permutations for the joltages is {joltage_result}')
 
 
 if __name__ == '__main__':
