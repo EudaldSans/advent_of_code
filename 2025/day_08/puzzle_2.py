@@ -63,7 +63,7 @@ def main():
     test_input = read_input("example.txt")
 
     assert (res := solve(test_input, 10)) == (40, 25272), f'Actual: {res}'
-    print(f'Part 1 and 2 {solve(input, 1000)}')  # 42840, 170629052
+    print(f'Part 1 and 2 {solve(input, 1000)}')
 
 
 if __name__ == '__main__':
